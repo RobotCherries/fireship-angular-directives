@@ -1,4 +1,7 @@
 import { Component } from '@angular/core';
+import { AngularFirestore } from '@angular/fire/firestore';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -6,5 +9,30 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'fireship-angular-directives';
+  customers$;
+  constructor(private afs: AngularFirestore) {
+    this.customers$ =  this.collection$('customers');
+  }
+
+  holdHandler(e): void {
+    console.log(e);
+  }
+
+
+ // Helper to map collection doc IDs to Observable
+  collection$(path, query?): Observable<any> {
+    return this.afs
+      .collection(path, query)
+      .snapshotChanges()
+      .pipe(
+        map(actions => {
+          return actions.map(a => {
+            const data: any = a.payload.doc.data();
+            const id = a.payload.doc.id;
+            return { id, ...data };
+          });
+        })
+      );
+  }
+
 }
